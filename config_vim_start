@@ -1,0 +1,27 @@
+vim的配置文件存放在/etc/目录中，配置文件名为vimrc
+
+在Fedora中vim的配置文件存放在/etc目录中，配置文件名为vimrc
+
+在终端 输入以下命令来编辑vimrc配置文件：
+vim /etc/vimrc
+或gedit /etc/vimrc
+
+ 
+
+vim /etc/virc
+或gedit /etc/virc
+
+1、显示行号
+    在文件末端添加一新行，输入 set nu
+
+2、语法高亮
+    在文件中找到 "syntax on   这一行，去掉前面的双引号"，双引号是注释的意思
+
+3、自动缩进
+
+在文件末尾添加一行，输入  set autoindent
+再添加一行，输入         set cindent
+
+其中 autoindent 是自动缩进； cindent是特别针对 C语言语法自动缩进
+
+注意：如果设置好以上设置后，VIM没有作出相应的动作，那么请你把你的VIM升级到最新版，一般只要在终端输入以下命令即可：yum install vim
