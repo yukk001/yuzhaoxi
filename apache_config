@@ -1,4 +1,4 @@
-Apache的配置 
+Apache的配置 ---525修改
 
 Apache的配置由httpd.conf文件配置，因此下面的配置指令都是在httpd.conf文件中修改。 
 主站点的配置(基本配置) 
