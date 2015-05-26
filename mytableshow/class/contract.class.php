@@ -468,7 +468,7 @@ class MyContractList
         {
             $str_condition .= " AND CONTRACT.CONTRACT_RUNID = '" . $this->contract_runid . "' ";
         }
-        file_put_contents("a.txt",var_export($str_condition,true));
+        //file_put_contents("a.txt",var_export($str_condition,true));
         return $str_condition;
     
     }
