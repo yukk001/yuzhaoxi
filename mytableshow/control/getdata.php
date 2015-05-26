@@ -3,7 +3,7 @@ include_once("../conn/conn.php");
 include_once("../class/contract.class.php");
 
     //设置过滤条件
-    //file_put_contents('a.txt', var_export($_GET,true));
+    $conn  = getconn();
     $query_obj = new MyContractList();
     if($_GET["CONTRACT_NUM"]){
 		$CONTRACT_NUM =  $_GET["CONTRACT_NUM"];
@@ -205,15 +205,15 @@ include_once("../class/contract.class.php");
 	$query_obj->_set("start_pos", ($page-1)*$rows); 
 	$query_obj->_set("row_number", $rows);
 	
-	$count = $query_obj->getContractListCount(); 
-	$list = $query_obj->getContractList();
+	$count = $query_obj->getContractListCount($conn); 
+	$list = $query_obj->getContractList($conn);
 	
 	
 	foreach($list as $key => $value)
 	{
 		$q_contract_num		=	$value["CONTRACT_NUM"];
-		$q_contract_name	=	cstr_replace("\\","\\\\",$value["CONTRACT_NAME"]);
-		$q_leader			=	rtrim(GetUserNameById($value["LEADER"]),",");
+		$q_contract_name	=	$value["CONTRACT_NAME"];
+		$q_leader			=	$value["LEADER"];
 		$q_signed_time		=	$value["SIGNED_TIME"];
 		$q_amount		    =	number_format($value["AMOUNT"],2);
 		$q_contract_runid	=	"<a href=javascript:view_work(\"\",\"".$value['CONTRACT_RUNID']."\",\"\",\"214\"); title=\"\">".$value["CONTRACT_RUNID"]."</a>";
@@ -251,6 +251,7 @@ include_once("../class/contract.class.php");
         	$s_operation="";
         	$result["rows"][] = array("cell" => $LogsItem,"flow_id" => $q_flow_id);
 	}
+	
 	$result['records'] = $count; //总记录数
 	$result['page'] = $page; //当前页
 	$result['total'] = (integer)(($result['records']-1)/$rows)+1; //总页数
@@ -258,10 +259,8 @@ include_once("../class/contract.class.php");
 	header("Cache-Control: no-cache, must-revalidate" );
 	header("Pragma: no-cache" );
 	header("Content-type: text/x-json; charset=$MYOA_CHARSET");
-	echo array_to_json($result);
-?>
-
-
-
-
+	
+	
+	
+	echo json_encode($result);
 ?>
