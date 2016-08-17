@@ -2,51 +2,51 @@
 
 class MyContractList
 {
-    private $contract_id;//Ö÷¼üID
-    private $dept_id;//²¿ÃÅ
-    private $contract_type;//ºÏÍ¬ÀàÐÍ
-    private $second_type;//¶þ¼¶ÀàÐÍ
-    private $item_num;//ÏîÄ¿±àºÅ
-    private $item_name;//ÏîÄ¿Ãû³Æ
-    private $contract_num;//ºÏÍ¬±àºÅ
-    private $is_item; //ÊÇ·ñÎªÏîÄ¿ºÏÍ¬
-    private $contract_state;//ºÏÍ¬×´Ì¬
-    private $signed_time;//Ç©¶©Ê±¼ä
-    private $archive_time;//¹éµµÊ±¼ä
-    private $archive_address;//¹éµµÎ»ÖÃ
-    private $contract_name;//ºÏÍ¬Ãû³Æ   
-    private $party_a;//¼×·½    
-    private $party_b;//ÒÒ·½    
-    private $party_c;//±û·½    
-    private $contract_content;//ºÏÍ¬Ö÷ÒªÄÚÈÝ
-    private $amount_min;//ºÏÍ¬½ð¶î²éÑ¯ÏÂÏÞ   
-    private $amount;//ºÏÍ¬½ð¶î   
-    private $amount_max;//ºÏÍ¬½ð¶î²éÑ¯ÉÏÏÞ    
-    private $payment_ratio;//¸¶¿î±ÈÀý   
-    private $contract_term;//ºÏÍ¬ÆÚÏÞ  
-    private $bank_account;//ÒøÐÐÕËºÅ   
-    private $version;//°æ±¾   
-    private $copies;//·ÝÊý 
-    private $leader;//ºÏÍ¬¸ºÔðÈË    
-    private $archive_leader;//¹éµµÈË    
-    private $operators_type;//ÔËÓªÉÌÀà±ð   
-    private $province;//Ê¡·Ý   
-    private $region;//µØÇø 
-    private $actual_collection;//Êµ¼ÊÊÕ¿î
-    private $actual_payment;//Êµ¼Ê¸¶¿î
-    private $contract_runid;//ºÏÍ¬ÉóÅúÁ÷Ë®ºÅ
-    private $remarks;//±¸×¢
-    
-    
+    private $contract_id;//ä¸»é”®ID
+    private $dept_id;//éƒ¨é—¨
+    private $contract_type;//åˆåŒç±»åž‹
+    private $second_type;//äºŒçº§ç±»åž‹
+    private $item_num;//é¡¹ç›®ç¼–å·
+    private $item_name;//é¡¹ç›®åç§°
+    private $contract_num;//åˆåŒç¼–å·
+    private $is_item; //æ˜¯å¦ä¸ºé¡¹ç›®åˆåŒ
+    private $contract_state;//åˆåŒçŠ¶æ€
+    private $signed_time;//ç­¾è®¢æ—¶é—´
+    private $archive_time;//å½’æ¡£æ—¶é—´
+    private $archive_address;//å½’æ¡£ä½ç½®
+    private $contract_name;//åˆåŒåç§°
+    private $party_a;//ç”²æ–¹
+    private $party_b;//ä¹™æ–¹
+    private $party_c;//ä¸™æ–¹
+    private $contract_content;//åˆåŒä¸»è¦å†…å®¹
+    private $amount_min;//åˆåŒé‡‘é¢æŸ¥è¯¢ä¸‹é™
+    private $amount;//åˆåŒé‡‘é¢
+    private $amount_max;//åˆåŒé‡‘é¢æŸ¥è¯¢ä¸Šé™
+    private $payment_ratio;//ä»˜æ¬¾æ¯”ä¾‹
+    private $contract_term;//åˆåŒæœŸé™
+    private $bank_account;//é“¶è¡Œè´¦å·
+    private $version;//ç‰ˆæœ¬
+    private $copies;//ä»½æ•°
+    private $leader;//åˆåŒè´Ÿè´£äºº
+    private $archive_leader;//å½’æ¡£äºº
+    private $operators_type;//è¿è¥å•†ç±»åˆ«
+    private $province;//çœä»½
+    private $region;//åœ°åŒº
+    private $actual_collection;//å®žé™…æ”¶æ¬¾
+    private $actual_payment;//å®žé™…ä»˜æ¬¾
+    private $contract_runid;//åˆåŒå®¡æ‰¹æµæ°´å·
+    private $remarks;//å¤‡æ³¨
+
+
     private $begin_time;
     private $end_time;
-    
+
     private $contract_query_type=1;
 
     private $start_pos = 0;
 
     private $row_number = 10;
-    
+
     private $order_by_field;
 
     private $order_by_direct;
@@ -86,37 +86,37 @@ class MyContractList
         $this->contract_runid = $contract_runid;
         $this->order_by_field = "CONTRACT.SIGNED_TIME";
         $this->order_by_direct = "DESC";
-    
+
     }
 
     public function _get($property_name)
     {
 
         $property_name = strtolower ( $property_name );
-        
+
         if (isset ( $this->$property_name ))
         {
-            
+
             return $this->$property_name;
         }
         else
         {
-            
+
             return NULL;
         }
-    
+
     }
 
     public function _set($property_name, $value)
     {
 
         $property_name = strtolower ( $property_name );
-        
+
         $this->$property_name = $value;
-    
+
     }
-    
-    
+
+
     public function getContractListCount($r_connection = NULL)
     {
 
@@ -124,21 +124,21 @@ class MyContractList
         {
             $r_connection = TD::conn ();
         }
-        
+
         $select_expr = " COUNT( CONTRACT.CONTRACT_ID) as TOTAL_NUMBER ";
         $where_definition = $this->getCondition ();
         $table_reference = " CONTRACT ";
         $sql = "SELECT " . $select_expr . " FROM " . $table_reference . $where_definition;
-        
+
         $total_number = 0;
         $r_cursor = exequery ( $r_connection , $sql );
         if ($row = mysql_fetch_array ( $r_cursor ))
         {
             $total_number = $row ["TOTAL_NUMBER"];
         }
-        
+
         return $total_number;
-    
+
     }
 
     public function getContractList($r_connection = NULL)
@@ -148,11 +148,11 @@ class MyContractList
         {
             $r_connection = TD::conn ();
         }
-        
+
         $list = Array ();
-        
-        $select_expr = " CONTRACT.CONTRACT_ID, 
-                         CONTRACT.DEPT_ID, 
+
+        $select_expr = " CONTRACT.CONTRACT_ID,
+                         CONTRACT.DEPT_ID,
                          CONTRACT.CONTRACT_TYPE,
                          CONTRACT.SECOND_TYPE,
                          CONTRACT.ITEM_NUM,
@@ -168,8 +168,8 @@ class MyContractList
                          CONTRACT.PARTY_A,
                          CONTRACT.PARTY_B,
                          CONTRACT.PARTY_C,
-                         CONTRACT.CONTRACT_CONTENT, 
-                         CONTRACT.AMOUNT, 
+                         CONTRACT.CONTRACT_CONTENT,
+                         CONTRACT.AMOUNT,
                          CONTRACT.PAYMENT_RATIO,
                          CONTRACT.CONTRACT_TERM,
                          CONTRACT.BANK_ACCOUNT,
@@ -186,9 +186,9 @@ class MyContractList
                          CONTRACT.ACTUAL_PAYMENT,
                          CONTRACT.CONTRACT_RUNID ,
                          CONTRACT.ORIGINAL_COPY ";
-                         
+
         $where_definition = $this->getCondition ();
-        
+
         $order_definition = " ORDER BY " . $this->order_by_field . " " . $this->order_by_direct;
         if ($this->start_pos != 0 || $this->row_number != 0)
         {
@@ -198,128 +198,128 @@ class MyContractList
         {
             $limit_definition = "";
         }
-        
+
         $sql = "SELECT " . $select_expr . " FROM CONTRACT " . $where_definition . $order_definition . $limit_definition;
         file_put_contents("contractlist_sql.txt",var_export($sql,true));
         $r_cursor = exequery ( $r_connection , $sql );
         while ( $row = mysql_fetch_array ( $r_cursor ) )
         {
             $list [$row ["CONTRACT_ID"]] = Array (
-                   
-					'DEPT_ID'		=>	$row['DEPT_ID'],
-					'CONTRACT_TYPE'		=>	$row['CONTRACT_TYPE'],
-					'SECOND_TYPE'		=>	$row['SECOND_TYPE'],
-					'ITEM_NUM'	=>	$row['ITEM_NUM'],
-					'IS_ITEM'		=>	$row['IS_ITEM'],
-					'ITEM_NAME'		=>	$row['ITEM_NAME'],
-					'CONTRACT_NUM'		=>	$row['CONTRACT_NUM'],
-					'CONTRACT_COUNTER_NUM'		=>	$row['CONTRACT_COUNTER_NUM'],
-					'SIGNED_TIME'		=>	$row['SIGNED_TIME'],
-					'ARCHIVE_TIME'		=>	$row['ARCHIVE_TIME'],
-					'ARCHIVE_ADDRESS'		=>	$row['ARCHIVE_ADDRESS'],
-					'CONTRACT_NAME'		=>	$row['CONTRACT_NAME'],
-					'PARTY_A'		=>	$row['PARTY_A'],
-					'PARTY_B'		=>	$row['PARTY_B'],
-					'PARTY_C'		=>	$row['PARTY_C'],
-					'CONTRACT_CONTENT'		=>	$row['CONTRACT_CONTENT'],
-					'AMOUNT'		=>	$row['AMOUNT'],
-					'PAYMENT_RATIO'		=>	$row['PAYMENT_RATIO'],
-					'CONTRACT_TERM'		=>	$row['CONTRACT_TERM'],
-					'BANK_ACCOUNT'		=>	$row['BANK_ACCOUNT'],
-					'COPIES'		=>	$row['COPIES'],
-					'LENDED_COPIES'		=>	$row['LENDED_COPIES'],	
-					'LAST_COPIES'   =>	$row['LAST_COPIES'],			
-					'LEADER'		=>	$row['LEADER'],
-					'ARCHIVE_LEADER'		=>	$row['ARCHIVE_LEADER'],
-					'OPERATORS_TYPE'		=>	$row['OPERATORS_TYPE'],
-					'PROVINCE'		=>	$row['PROVINCE'],
-					'REGION'		=>	$row['REGION'],
-					'ACTUAL_COLLECTION'		=>	$row['ACTUAL_COLLECTION'],
-					'ACTUAL_PAYMENT'		=>	$row['ACTUAL_PAYMENT'],
-					'CONTRACT_RUNID'		=>	$row['CONTRACT_RUNID'],
-            		'ORIGINAL_COPY'		=>	$row['ORIGINAL_COPY']
+
+                'DEPT_ID'		=>	$row['DEPT_ID'],
+                'CONTRACT_TYPE'		=>	$row['CONTRACT_TYPE'],
+                'SECOND_TYPE'		=>	$row['SECOND_TYPE'],
+                'ITEM_NUM'	=>	$row['ITEM_NUM'],
+                'IS_ITEM'		=>	$row['IS_ITEM'],
+                'ITEM_NAME'		=>	$row['ITEM_NAME'],
+                'CONTRACT_NUM'		=>	$row['CONTRACT_NUM'],
+                'CONTRACT_COUNTER_NUM'		=>	$row['CONTRACT_COUNTER_NUM'],
+                'SIGNED_TIME'		=>	$row['SIGNED_TIME'],
+                'ARCHIVE_TIME'		=>	$row['ARCHIVE_TIME'],
+                'ARCHIVE_ADDRESS'		=>	$row['ARCHIVE_ADDRESS'],
+                'CONTRACT_NAME'		=>	$row['CONTRACT_NAME'],
+                'PARTY_A'		=>	$row['PARTY_A'],
+                'PARTY_B'		=>	$row['PARTY_B'],
+                'PARTY_C'		=>	$row['PARTY_C'],
+                'CONTRACT_CONTENT'		=>	$row['CONTRACT_CONTENT'],
+                'AMOUNT'		=>	$row['AMOUNT'],
+                'PAYMENT_RATIO'		=>	$row['PAYMENT_RATIO'],
+                'CONTRACT_TERM'		=>	$row['CONTRACT_TERM'],
+                'BANK_ACCOUNT'		=>	$row['BANK_ACCOUNT'],
+                'COPIES'		=>	$row['COPIES'],
+                'LENDED_COPIES'		=>	$row['LENDED_COPIES'],
+                'LAST_COPIES'   =>	$row['LAST_COPIES'],
+                'LEADER'		=>	$row['LEADER'],
+                'ARCHIVE_LEADER'		=>	$row['ARCHIVE_LEADER'],
+                'OPERATORS_TYPE'		=>	$row['OPERATORS_TYPE'],
+                'PROVINCE'		=>	$row['PROVINCE'],
+                'REGION'		=>	$row['REGION'],
+                'ACTUAL_COLLECTION'		=>	$row['ACTUAL_COLLECTION'],
+                'ACTUAL_PAYMENT'		=>	$row['ACTUAL_PAYMENT'],
+                'CONTRACT_RUNID'		=>	$row['CONTRACT_RUNID'],
+                'ORIGINAL_COPY'		=>	$row['ORIGINAL_COPY']
             );
         }
-        
+
         return $list;
-    
+
     }
 
     private function getCondition()
     {
 
-        
-        
+
+
         if (! empty ( $this->contract_query_type ) && $this->contract_query_type != "")
         {
-            if($this->contract_query_type==2) //ºÏÍ¬¹ÜÀíÔ±È¨ÏÞÎªËùÓÐºÏÍ¬
+            if($this->contract_query_type==2) //åˆåŒç®¡ç†å‘˜æƒé™ä¸ºæ‰€æœ‰åˆåŒ
             {
                 $str_condition = " WHERE CONTRACT.CONTRACT_ID !='' AND CONTRACT.DELETE_FLAG='1'  ";
-                if (! empty ( $this->dept_id ) && $this->dept_id != "")//ºÏÍ¬ËùÊô²¿ÃÅ
-	            {
-	                $str_condition .= " AND CONTRACT.DEPT_ID = '" . $this->dept_id . "' ";
-	            }
+                if (! empty ( $this->dept_id ) && $this->dept_id != "")//åˆåŒæ‰€å±žéƒ¨é—¨
+                {
+                    $str_condition .= " AND CONTRACT.DEPT_ID = '" . $this->dept_id . "' ";
+                }
             }
             else
             {
                 $str_condition = " WHERE CONTRACT.CONTRACT_NUM !='' AND CONTRACT.DELETE_FLAG='1'  AND CONTRACT.DEPT_ID = '" . $this->dept_id . "' ";
             }
-            
+
         }
         else
         {
             $str_condition = " WHERE CONTRACT.CONTRACT_NUM !='' AND CONTRACT.DELETE_FLAG='1' ";
-            if (! empty ( $this->dept_id ) && $this->dept_id != "")//ºÏÍ¬ËùÊô²¿ÃÅ
+            if (! empty ( $this->dept_id ) && $this->dept_id != "")//åˆåŒæ‰€å±žéƒ¨é—¨
             {
                 $str_condition .= " AND CONTRACT.DEPT_ID = '" . $this->dept_id . "' ";
             }
         }
-        
-        
 
-        if (! empty ( $this->contract_num ) && $this->contract_num != "")//ºÏÍ¬±àºÅ
+
+
+        if (! empty ( $this->contract_num ) && $this->contract_num != "")//åˆåŒç¼–å·
         {
             $str_condition .= " AND CONTRACT.CONTRACT_NUM LIKE '%" . $this->contract_num . "%' ";
         }
-        
-        if (! empty ( $this->is_item ) && $this->is_item != "")//ÊÇ·ñÎªÏîÄ¿ºÏÍ¬
+
+        if (! empty ( $this->is_item ) && $this->is_item != "")//æ˜¯å¦ä¸ºé¡¹ç›®åˆåŒ
         {
             $str_condition .= " AND CONTRACT.IS_ITEM = '" . $this->is_item . "' ";
         }
-        
-        if (! empty ( $this->contract_name ) && $this->contract_name != "")//ºÏÍ¬Ãû³Æ
+
+        if (! empty ( $this->contract_name ) && $this->contract_name != "")//åˆåŒåç§°
         {
-            
+
             $str_condition .= " AND CONTRACT.CONTRACT_NAME LIKE '%" . $this->contract_name . "%' ";
         }
-        
-        if (! empty ( $this->contract_type ) && $this->contract_type != "")//ºÏÍ¬ÀàÐÍ
+
+        if (! empty ( $this->contract_type ) && $this->contract_type != "")//åˆåŒç±»åž‹
         {
-            
+
             $str_condition .= " AND CONTRACT.CONTRACT_TYPE = '" . $this->contract_type . "' ";
         }
-        
-        if (! empty ( $this->second_type ) && $this->second_type != "")//ºÏÍ¬¶þ¼¶ÀàÐÍ
+
+        if (! empty ( $this->second_type ) && $this->second_type != "")//åˆåŒäºŒçº§ç±»åž‹
         {
             $str_condition .= " AND CONTRACT.SECOND_TYPE = '" . $this->second_type . "' ";
         }
-        
-        if (! empty ( $this->item_num ) && $this->item_num != "")//ºÏÍ¬ÏîÄ¿±àºÅ
+
+        if (! empty ( $this->item_num ) && $this->item_num != "")//åˆåŒé¡¹ç›®ç¼–å·
         {
             $str_condition .= " AND CONTRACT.ITEM_NUM = '" . $this->item_num . "' ";
-        }     
-        
-        if (! empty ( $this->item_name ) && $this->item_name != "")//ºÏÍ¬ÏîÄ¿Ãû³Æ
+        }
+
+        if (! empty ( $this->item_name ) && $this->item_name != "")//åˆåŒé¡¹ç›®åç§°
         {
             $str_condition .= " AND CONTRACT.ITEM_NAME LIKE '%" . $this->item_name . "%' ";
-        }     
-        
-        if (! empty ( $this->contract_state ) && $this->contract_state != "")//ºÏÍ¬×´Ì¬
+        }
+
+        if (! empty ( $this->contract_state ) && $this->contract_state != "")//åˆåŒçŠ¶æ€
         {
             $str_condition .= " AND CONTRACT.CONTRACT_STATE = '" . $this->contract_state . "' ";
-        }     
-        
-        
+        }
+
+
         if (! empty ( $this->begin_time ) && trim ( $this->begin_time ) != "")
         {
             if (! empty ( $this->end_time ) && trim ( $this->end_time ) != "")
@@ -337,56 +337,56 @@ class MyContractList
             {
                 $str_condition .= " AND CONTRACT.SIGNED_TIME <= '" . $this->end_time . " 23:59:59' ";
             }
-        } 
-          
-        if (! empty ( $this->signed_time ) && $this->signed_time != "")//ºÏÍ¬Ç©¶©Ê±¼ä
+        }
+
+        if (! empty ( $this->signed_time ) && $this->signed_time != "")//åˆåŒç­¾è®¢æ—¶é—´
         {
-            
+
             $str_condition .= " AND CONTRACT.SIGNED_TIME = '" . $this->signed_time . "' ";
-            
-        } 
-        
-        
-        
-            
-        
-        if (! empty ( $this->archive_time ) && $this->archive_time != "")//ºÏÍ¬¹éµµÊ±¼ä
+
+        }
+
+
+
+
+
+        if (! empty ( $this->archive_time ) && $this->archive_time != "")//åˆåŒå½’æ¡£æ—¶é—´
         {
             $str_condition .= " AND CONTRACT.ARCHIVE_TIME = '" . $this->archive_time . "' ";
-        }     
-        
-        if (! empty ( $this->archive_address ) && $this->archive_address != "")//ºÏÍ¬¹éµµÎ»ÖÃ
+        }
+
+        if (! empty ( $this->archive_address ) && $this->archive_address != "")//åˆåŒå½’æ¡£ä½ç½®
         {
             $str_condition .= " AND CONTRACT.ARCHIVE_ADDRESS = '" . $this->archive_address . "' ";
-        }            
-        
-         if (! empty ( $this->party_a ) && $this->party_a != "")//ºÏÍ¬¼×·½
+        }
+
+        if (! empty ( $this->party_a ) && $this->party_a != "")//åˆåŒç”²æ–¹
         {
             $str_condition .= " AND CONTRACT.PARTY_A LIKE '%" . $this->party_a . "%' ";
-        }  
-        
-         if (! empty ( $this->party_b ) && $this->party_b != "")//ºÏÍ¬ÒÒ·½
+        }
+
+        if (! empty ( $this->party_b ) && $this->party_b != "")//åˆåŒä¹™æ–¹
         {
             $str_condition .= " AND CONTRACT.PARTY_B LIKE '%" . $this->party_b . "%' ";
-        }  
-        
-         if (! empty ( $this->party_c ) && $this->party_c != "")//ºÏÍ¬±û·½
+        }
+
+        if (! empty ( $this->party_c ) && $this->party_c != "")//åˆåŒä¸™æ–¹
         {
             $str_condition .= " AND CONTRACT.PARTY_C LIKE '%" . $this->party_c . "%' ";
-        }  
-        
-        if (! empty ( $this->contract_content ) && $this->contract_content != "")//ºÏÍ¬Ö÷ÒªÄÚÈÝ
+        }
+
+        if (! empty ( $this->contract_content ) && $this->contract_content != "")//åˆåŒä¸»è¦å†…å®¹
         {
             $str_condition .= " AND CONTRACT.CONTRACT_CONTENT LIKE '%" . $this->contract_content . "%' ";
-        }  
-        
-        
-        
-        if (! empty ( $this->amount ) && $this->amount != "")//ºÏÍ¬½ð¶î
+        }
+
+
+
+        if (! empty ( $this->amount ) && $this->amount != "")//åˆåŒé‡‘é¢
         {
             $str_condition .= " AND CONTRACT.AMOUNT = '" . $this->amount . "' ";
-        }  
-         if (! empty ( $this->amount_min ) && trim ( $this->amount_min ) != "")
+        }
+        if (! empty ( $this->amount_min ) && trim ( $this->amount_min ) != "")
         {
             if (! empty ( $this->amount_max ) && trim ( $this->amount_max ) != "")
             {
@@ -403,74 +403,74 @@ class MyContractList
             {
                 $str_condition .= " AND CONTRACT.AMOUNT <= ". $this->amount_max ." ";
             }
-        } 
-        
-        
-        if (! empty ( $this->payment_ratio ) && $this->payment_ratio != "")//ºÏÍ¬¸¶¿î±ÈÀý
+        }
+
+
+        if (! empty ( $this->payment_ratio ) && $this->payment_ratio != "")//åˆåŒä»˜æ¬¾æ¯”ä¾‹
         {
             $str_condition .= " AND CONTRACT.PAYMENT_RATIO = '" . $this->payment_ratio . "' ";
-        } 
-        
-        if (! empty ( $this->contract_term ) && $this->contract_term != "")//ºÏÍ¬ÆÚÏÞ
+        }
+
+        if (! empty ( $this->contract_term ) && $this->contract_term != "")//åˆåŒæœŸé™
         {
             $str_condition .= " AND CONTRACT.CONTRACT_TERM = '" . $this->contract_term . "' ";
-        }  
-        
-        if (! empty ( $this->bank_account ) && $this->bank_account != "")//ÒøÐÐÕËºÅ
+        }
+
+        if (! empty ( $this->bank_account ) && $this->bank_account != "")//é“¶è¡Œè´¦å·
         {
             $str_condition .= " AND CONTRACT.BANK_ACCOUNT LIKE '%" . $this->bank_account . "%' ";
-        }  
-        
-        if (! empty ( $this->version ) && $this->version != "")//ºÏÍ¬°æ±¾
+        }
+
+        if (! empty ( $this->version ) && $this->version != "")//åˆåŒç‰ˆæœ¬
         {
             $str_condition .= " AND CONTRACT.VERSION = '" . $this->version . "' ";
-        }  
-        
-        if (! empty ( $this->copies ) && $this->copies != "")//ºÏÍ¬·ÝÊý
+        }
+
+        if (! empty ( $this->copies ) && $this->copies != "")//åˆåŒä»½æ•°
         {
             $str_condition .= " AND CONTRACT.COPIES = '" . $this->copies . "' ";
         }
-        
-        if (! empty ( $this->leader ) && $this->leader != "")//ºÏÍ¬¸ºÔðÈË
+
+        if (! empty ( $this->leader ) && $this->leader != "")//åˆåŒè´Ÿè´£äºº
         {
             $str_condition .= " AND CONTRACT.LEADER = '" . $this->leader . "' ";
         }
-        
-        if (! empty ( $this->archive_leader ) && $this->archive_leader != "")//ºÏÍ¬¹éµµÈË
+
+        if (! empty ( $this->archive_leader ) && $this->archive_leader != "")//åˆåŒå½’æ¡£äºº
         {
             $str_condition .= " AND CONTRACT.ARCHIVE_LEADER = '" . $this->archive_leader . "' ";
         }
-        
-        if (! empty ( $this->operators_type ) && $this->operators_type != "")//ºÏÍ¬ÔËÓªÉÌÀà±ð
+
+        if (! empty ( $this->operators_type ) && $this->operators_type != "")//åˆåŒè¿è¥å•†ç±»åˆ«
         {
             $str_condition .= " AND CONTRACT.OPERATORS_TYPE = '" . $this->operators_type . "' ";
         }
-        
-        if (! empty ( $this->province ) && $this->province != "")//ºÏÍ¬Ê¡·Ý
+
+        if (! empty ( $this->province ) && $this->province != "")//åˆåŒçœä»½
         {
             $str_condition .= " AND CONTRACT.PROVINCE = '" . $this->province . "' ";
         }
-        
-        if (! empty ( $this->region ) && $this->region != "")//ºÏÍ¬µØÇø
+
+        if (! empty ( $this->region ) && $this->region != "")//åˆåŒåœ°åŒº
         {
             $str_condition .= " AND CONTRACT.REGION = '" . $this->region . "' ";
         }
-        
-        if (! empty ( $this->actual_collection ) && $this->actual_collection != "")//ºÏÍ¬Êµ¼ÊÊÕ¿î
+
+        if (! empty ( $this->actual_collection ) && $this->actual_collection != "")//åˆåŒå®žé™…æ”¶æ¬¾
         {
             $str_condition .= " AND CONTRACT.ACTUAL_COLLECTION = '" . $this->actual_collection . "' ";
         }
-        if (! empty ( $this->actual_payment ) && $this->actual_payment != "")//ºÏÍ¬Êµ¼Ê¸¶¿î
+        if (! empty ( $this->actual_payment ) && $this->actual_payment != "")//åˆåŒå®žé™…ä»˜æ¬¾
         {
             $str_condition .= " AND CONTRACT.ACTUAL_PAYMENT = '" . $this->actual_payment . "' ";
         }
-        if (! empty ( $this->contract_runid ) && $this->contract_runid != "")//ºÏÍ¬ÉóÅúÁ÷Ë®ºÅ
+        if (! empty ( $this->contract_runid ) && $this->contract_runid != "")//åˆåŒå®¡æ‰¹æµæ°´å·
         {
             $str_condition .= " AND CONTRACT.CONTRACT_RUNID = '" . $this->contract_runid . "' ";
         }
         //file_put_contents("a.txt",var_export($str_condition,true));
         return $str_condition;
-    
+
     }
 
 
