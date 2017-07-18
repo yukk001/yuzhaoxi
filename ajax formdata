@@ -1,0 +1,199 @@
+
+使用ajax请求数据，很多人都会，比如说：
+
+$.post(path,{data:data},function(data){
+    ...
+},"json");
+又或者是这样的ajax
+
+复制代码
+$.ajax({
+                url:"${pageContext.request.contextPath}/public/testupload",
+                type:"post",
+                data:{username:username},
+                success:function(data){
+                    window.clearInterval(timer);
+                    console.log("over..");
+                },
+                error:function(e){
+                    alert("错误！！");
+                    window.clearInterval(timer);
+                }
+            });        
+复制代码
+同样的，很多人也会。但是写的越多就越会发现，这样子虽然可以避免刷新页面，但是我们要写大量的js来到得数据：
+
+var username = $("#username").val();
+var password = $("#password").val();
+...
+如果数量少的话，那还没有什么，但是如果数据十分大的话，那就十分的麻烦，那有没有什么简单的方法呢？答案肯定有的！下面介绍两种方法，可以极大的提高开发人员的效率。
+
+ 
+
+方法
+
+方法一：使用FormData对象
+
+FormData对象是html5的一个对象，目前的一些主流的浏览器都已经兼容。额，如果你说ie8什么的，那我们还是来谈谈今天的天气吧，我没听见。呵呵，开个玩笑，不支持FormData的，可以使用方法二，下面会介绍。接着说FormData，它是一个html5的javascript对象，非常的强大。
+
+FormData可以凭空创建一个对象，然后往这个对象里面添加数据，然后直接提交，不需要写一行html代码，如下：
+
+复制代码
+          var form = new FormData();
+          form.append("username","zxj");
+          form.append("password",123456);
+          var req = new XMLHttpRequest();
+          req.open("post", "${pageContext.request.contextPath}/public/testupload", false);
+          req.send(form);
+复制代码
+这样就可以向浏览器发送表单数据了，或者也可以使用Jquery这样发送：
+
+复制代码
+ var form = new FormData();
+  form.append("username","zxj");
+  form.append("password",123456);
+　$.ajax({
+                url:"${pageContext.request.contextPath}/public/testupload",
+                type:"post",
+                data:form,
+                processData:false,
+                contentType:false,
+                success:function(data){
+                    window.clearInterval(timer);
+                    console.log("over..");
+                }
+});
+复制代码
+这样也可以直接发送数据到后台。
+
+你以为这就完了？不！这才刚开始呢！！
+
+ 
+
+其次FormData还支持直接从html中的表单生成数据，就是在html页面中已经有数据了，然后FormData可以直接把这个表单的数据写入这个对象，然后直接提交给后台
+
+代码如下，先给出html代码:
+
+复制代码
+<form id="tf">
+            <input type="file" name="img"/>
+            <input type="text" name="username"/>
+            <input type="button" value="提" onclick="test();"/>
+                        .............
+ </form>
+复制代码
+大家注意到没有，里面可是有文件的哦！
+
+没错，FormData还支持困扰众多开发者已久的ajax的上传文件，以前我们上传文件，需要写一个表单直接刷新提交，但是这里不需要，下面给出提交代码：
+
+ 
+
+复制代码
+        function test(){
+            var form = new FormData(document.getElementById("tf"));
+//             var req = new XMLHttpRequest();
+//             req.open("post", "${pageContext.request.contextPath}/public/testupload", false);
+//             req.send(form);
+            $.ajax({
+                url:"${pageContext.request.contextPath}/public/testupload",
+                type:"post",
+                data:form,
+                processData:false,
+                contentType:false,
+                success:function(data){
+                    window.clearInterval(timer);
+                    console.log("over..");
+                },
+                error:function(e){
+                    alert("错误！！");
+                    window.clearInterval(timer);
+                }
+            });        
+            get();//此处为上传文件的进度条
+        }
+复制代码
+ 
+
+就是这么简单，使用FormData，在构造这个对象的时候，把表单的对象，作为一个参数放进去，就可以了，然后FormData，就会得到这个表单对象里面的所有的参数，甚至我们在表单中，都不需要声明enctype ="multipart/form-data" ，就可以直接提交。
+
+使用FormData，第一是在提交表单的时候，不需要写大量的js来获得表单数据，直接把表单对象构造就行了。第二就是可以直接异步上传文件，简单牛逼爆了！
+
+注意：使用FormData提交的时候，大家会注意到表单提交的是request payload，具体有兴趣的同学可以自己百度，它不是之前的Form data提交的，所以后台也是要经过处理的，比如springMVC就需要配置
+
+<!-- 配置nultipartresolver,注意：id名必须这样写，不然会报错 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8"></property>
+        <property name="maxInMemorySize" value="10240000"></property>
+    </bean>
+不然会接收不到数据，当然，后台的话，我们这里就先不管。
+
+ 
+
+方法二：使用jquery.form.js
+
+Jquery.form.js是一个强大的表单插件，其大量的提供了表单操作的各种简便的方法，下面给出一些Jquery.form.js的说明：
+
+ 
+
+ajaxForm	增加所有需要的事件监听器，为ajax提交表单做准备。ajaxForm并不能提交表单。在document的ready函数中，使用ajaxForm来为ajax提交表单进行准备。	接受0个或1个参数。参数可以是一个回调函数，也可以是一个Options对象。	$("#formid").ajaxForm();
+ajaxSubmit	使用ajax提交表单。	接受0个或1个参数。参数可以是一个回调函数，也可以是一个Options对象。	
+$("#formid").ajaxSubmit();
+
+或
+
+$("#formid").submit(function(){
+
+    $(this).ajaxSubmit();
+
+    return false;
+
+});
+
+formSerialize	将表单串行化（或序列化）为一个查询字符串。这个方法将返回以下格式的字符串：name1=value1&name2=value2。	无	$("#formid").formSerialize();
+fieldSerialize	将表单的字段元素串行化（或序列化）为一个查询字符串。当只有部分表单字段需要进行串行化（或序列化）时，使用这个就很方便了。返回以下格式的字符串：name=value1&name2=value2。	无	$("#formid .specialFields").fieldSerialize();
+fieldValue	返回匹配插入数组中的表单元素值。该方法以数组的形式返回数据。如果元素值被判定可能无效，则数组为空。	无	$("#formid :password").fieldValue();
+resetForm	将表单恢复到初始状态。	无	$("#formid").resetForm();
+clearForm	清除表单元素。该方法将所有的text、password、textarea置空，清除select元素中的选定，以及所有radio按钮和checkbox按钮重置为非选定状态。	无	$("#formid").clearForm();
+clearFields	清除字段元素。只有部分表单元素需要清除时方便使用。	无	$("#formid .specialFields").clearFields();
+Options对象
+
+ajaxForm和ajaxSubmit都支持众多的选项参数，这些选项参数可以使用一个Options对象来提供。
+
+ 
+
+target	指明页面中由服务器响应进行更新的元素。元素的值可能被指定为一个jQuery选择器字符串、一个jquery对象、一个DOM元素。	默认值：null
+url	指定提交表单数据的URL。	默认值：表单的action属性值
+type	指定提交表单数据的方法（method）：“GET”或“POST”。	默认值：GET
+beforeSubmit	表单提交前被调用的回调函数。如果回调函数返回false表单将不被提交。回调函数带三个调用参数：数组形式的表单数据，jQuery表单对象，以及传入ajaxForm/ajaxSubmit中的Options对象。	默认值：null
+success	表单成功提交后调用的回调函数。然后dataType选项值决定传回responseText还是responseXML的值。	默认值：null
+dataType	返回的数据类型：null、"xml"、"script"、"json"其中之一。	默认值：null
+resetForm	表示如果表单提交成功是否进行重置。	默认值：null
+clearForm	表示如果表单提交成功是否清除表单数据。	默认值：null
+
+ 
+
+那么现在来说一些它的主要用法吧！
+
+ 
+
+它也支持对一个表单的ajax提交，而且提交方式更为简便，如下：
+
+html:
+
+<form id="tf">
+            <input type="file" name="img"/>
+            <input type="text" name="username"/>
+            <input type="button" value="提" onclick="test();"/>
+        </form>
+下面使用jquery.form.js的表单插件来提交表单
+
+
+$("#tf").ajaxSubmit();
+额，就是这么简单，你也不要问我为什么就是这么简单，然后它就是会把整个表单，作为一个ajax来提交，同样的，它也支持文件上传！一些其它的用法，请参照前面给出的说明就可以了！
+
+ 
+
+
+感谢您的阅读，如果您觉得阅读本文对您有帮助，请点一下“推荐”按钮。本文欢迎各位转载，但是转载文章之后必须在文章页面中给出作者和原文连接。
+
+转自http://www.cnblogs.com/zhuxiaojie/p/4783939.html
