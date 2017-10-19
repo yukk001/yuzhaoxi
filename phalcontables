@@ -1,0 +1,66 @@
+phalcon: 按年分表的model怎么建？table2017,table2018...相同名的分表模型怎么建
+
+场景：当前有一张表：Ntime，因为表太大了，考虑要分表:
+
+Ntime2017
+
+Ntime2016
+
+Ntime2015
+
+......
+
+那么这么类型的表的模型model只能建一个 Ntime模型文件,利用phalcon的phalcon/mvc/model中的getSource/setSource来完成设置
+
+model应该这么建：
+
+use Phalcon\Mvc\Model;
+class Ntime extends Model {
+
+    //id
+    public $id;
+    //国家cid
+    public $name;
+    //省市id
+    public $create_time;
+
+	
+	public static $table_name;
+	
+	public function initialize()
+	{
+		
+		$this->setSource(self::$table_name);
+	}
+
+
+}
+　　
+
+Controller应该这么写：
+
+public function indexAction()
+    {
+        
+
+		//一
+		\Ntime::$table_name = ‘ntime2015‘;
+		$result = $this->modelsManager->createBuilder()
+           ->columns("id,name,create_time")
+           ->from("Ntime")
+            ->orderBy("id ASC")
+			->getQuery()
+			->execute()
+			->toArray();
+		
+		//二
+		\Ntime::$table_name = ‘ntime2017‘;
+		$result = \Ntime::find([
+			‘limit‘=>2	
+		])->toArray();      
+		
+		var_dump($result);
+
+		echo "gaga";
+		exit;
+    }
