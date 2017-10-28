@@ -232,4 +232,4 @@ setnx(key, value)
     返回值：
 
         被移除key的数量。
-        摘自：http://www.cnblogs.com/wenxiong/p/3954174.html
+        摘自：http://www.cnblogs.com/wenxiong/p/3954174.html 
