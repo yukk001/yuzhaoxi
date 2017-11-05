@@ -2,3 +2,17 @@ Vue.js,Angularjs,
 
 
 prototype 定义实例之后可以调用原型的方法、
+
+原型链：假如说，有一个function Animal(){
+    this.name='动物';
+    this.run = function (){
+      console.log('跑');
+    }
+    
+    function bird(){
+      this.name='鸟';
+      this.fly =function (){
+        console.log('飞');
+      }
+    }
+}
