@@ -48,7 +48,14 @@ console.dir(crow)
 
 事件流
 
-事件委托
+事件委托jquery('body').on('click','a',function(){});
+
+执行流：语法错误只影响当前代码块，不影响整个文件；
+        运行时错误，到达运行时阶段后不再运行当前代码块后续内容
+        settimeout块会在程序执行后执行；
+        jqueryready函数内，会被错误
+        
+
 
 
 
