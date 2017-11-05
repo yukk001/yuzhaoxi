@@ -56,6 +56,8 @@ console.dir(crow)
         jqueryready函数内，会被错误
 JS执行过程：块级顺序，事件随后，timeout单独线程块
 
+JS类型转换：
+
 
 
 
