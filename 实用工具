@@ -2,3 +2,9 @@ http_load   压力测试
 navcat 
 
 RabbitMQ
+
+
+
+netsh wlan set hostednetwork mode=allow ssid=4Gtest key=12345678
+
+netsh wlan start hostednetwork 
