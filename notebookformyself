@@ -1,1 +1,14 @@
 Yulei12345
+
+
+
+
+
+memcached的有用的方法：
+
+getDelayedByKey 
+getMulti
+cas
+setSaslAuthData 
+append 
+preappend
