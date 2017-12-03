@@ -1,0 +1,45 @@
+//初始化curl
+$ch = curl_init();
+$url = 'xxx';
+$option = [
+ CURLOPT_URL => $url,
+ CURLOPT_HEADER => 1,
+ CURLOPT_RETURNTRANSFER => 1,
+];
+curl_setopt_array($ch, $option);
+$output = curl_exec($ch);
+preg_match_all('/Set-Cookie: (.*);/i', $output, $str); //正则匹配
+//如果有token的话就获取token
+preg_match('/token = \"(.*)\"/i', $output, $token);
+if (empty($str)) {
+ return false;
+}
+$cook = $str[1];
+$cookie = implode(';', $cook);
+ 
+$up_url = 'xxx';
+$post_data = [
+ 'name' => 'test_',
+ 'tel' => '18819271234',
+ 'email' => 'qqhahadfdfads@163.com',
+ 'message' => 'this is my message;',
+ '_token' => $token[1],
+];
+$options = [
+ CURLOPT_URL => $up_url,
+ CURLOPT_RETURNTRANSFER => 1,
+ CURLOPT_HEADER => 1,
+ CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36",
+ CURLOPT_COOKIESESSION => 1,
+ CURLOPT_POST => 1,
+ CURLOPT_POSTFIELDS => $post_data,
+ CURLOPT_COOKIE => $cookie
+];
+curl_setopt_array($ch, $options);
+$res = curl_exec($ch);
+// $info = curl_getinfo($ch);
+if ($res === FALSE) {
+ p('curl Error: ' . curl_error($ch));
+}
+curl_close($ch);
+p($res);
