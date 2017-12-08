@@ -1,7 +1,7 @@
 http_load   压力测试
 navcat 
 
-RabbitMQ
+rabbitmq  消息队列
 
 
 
