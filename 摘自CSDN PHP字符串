@@ -1,0 +1,748 @@
+PHP内核探索之变量（7）- 不平凡的字符串
+原创 2015年03月30日 17:15:54 2958
+切，一个字符串有什么好研究的。
+别这么说，看过《平凡的世界》么，平凡的字符串也可以有不平凡的故事。试看：
+（1）       在C语言中，strlen计算字符串的时间复杂度是？PHP中呢？
+（2）       在PHP中，怎样处理多字节字符串？PHP对unicode的支持如何？
+同样是字符串，为什么c语言与C++/PHP/Java的均不相同？
+数据结构决定算法，这句话一点不假。
+那么我们今天就来掰一掰，PHP中的字符串结构，以及相关字符串函数的实现。
+一、  字符串基础
+
+　　字符串可以说是PHP中遇到最多的数据结构之一了（另外一个比较常用的是数组，见PHP内核探索之变量（4）- 数组操作）。而由于PHP语言的特性和应用场景，使得我们日常的很多工作，实际上都是在处理字符串。也正是这个原因，PHP为开发者提供了丰富的字符串操作函数（初步统计约有100个，这个数量相当可观）。那么，在PHP中，字符串是怎样实现的呢？与C语言又有什么区别呢？
+　1.　　PHP中字符串的表现形式
+　　在PHP中使用字符串有四种常见的形式：
+(1)    双引号
+         这种形式比较常见：$str=”this is \0 a string”; 而且以双引号包含的字符串中可以包含变量、控制字符等：$str = "this is $name, aha.\n";
+(2)     单引号
+　　单引号包含的字符都被认为是raw的，因此不会解析单引号中的变量，控制字符等：
+1
+2
+3
+$string = "test";
+$str = 'this is $string, aha\n';
+echo $str;
+(3)     Heredoc
+Heredoc比较适合较长的字符串表示，且对于多行的字符串表示更加灵活多样。与双引号表示形式类似，heredoc中也可以包含变量。常见的形式是：
+1
+2
+3
+4
+5
+6
+7
+$string ="test string";
+$str = <<<STR
+This is a string \n,
+My string is $string
+STR;
+ 
+echo $str;
+(4)     nowdoc（5.3+支持）
+nowdoc和heredoc是如此的类似，以至于我们可以把它们当做是一对儿亲兄弟。nowdoc的起始标志符是用单引号括起来的，与单引号相似，它不会解析其中的变量，格式控制符等：
+1
+2
+3
+4
+5
+6
+$s = <<<'EOT'
+this is $str
+this is \t test;
+EOT;
+ 
+echo $s;
+2.       PHP中字符串的结构
+ 　　之前提到过，PHP中变量是用Zval（PHP内核探索之变量（1）Zval）这样一个结构体来存储的。Zval的结构是：
+struct _zval_struct {
+    zvalue_value value;       /* value */
+    zend_uint refcount__gc;   /* variable ref count */
+    zend_uchar type;          /* active type */
+    zend_uchar is_ref__gc;    /* if it is a ref variable */
+};
+   而变量的值是zvalue_value这样一个共用体：
+typedef union _zvalue_value {
+    long lval;
+    double dval;
+    struct {                    /* string */
+        char *val;
+        int len;
+    } str;
+    HashTable *ht;
+    zend_object_value obj;
+} zvalue_value;
+我们从中抽取出字符串的结构：
+struct {
+    char *val;
+    int len;
+} str;
+现在比较清楚了，PHP中字符串在底层实际上是一个结构体，该结构体包含了指向字符串的指针和该字符串的长度。
+那么为什么这么做呢？换句话说，这样做有什么好处呢？我们接下来，将PHP的字符串与C语言的字符串做一个对比，以解释采用这样一种结构来存储字符串的优势。
+3.　　与c语言字符串的比较
+         我们知道，在c语言中，一个字符串可以用两种常见的形式存储，一种是使用指针方式，另一种是使用字符数组。我们接下来的说明，都以c语言的字符数组的方式来存储字符串。
+（1）       PHP字符串是二进制安全的，而C字符串不是。
+     我们经常会提到”二进制安全”这一术语，那么二进制安全究竟是什么意思呢？
+     wikipedia中对二进制安全（Binary Safe）的定义是：
+Binary-safe is a computer programming term mainly used in connection with string manipulating functions. 
+A binary-safe function is essentially one that treats its input as a raw stream of data without any specific format. 
+It should thus work with all 256 possible values that a character can take (assuming 8-bit characters).
+　　翻译过来就是：
+     二进制安全是计算机编程的术语，主要用于字符串操作函数。一个二进制安全的函数，本质上是指它将输入看做是原始的数据流（raw）而不包含任何特殊的格式。
+     那么为什么C字符串不是二进制安全的？我们知道，在C语言中，以字符数组表示的字符串总是以\0结尾的，这个\0便是C字符串的specific format, 用于标识字符串的结束。更近一步说，如果一个字符串中本身包含了\0且并不是该字符串的结尾，那么在C中，\0后面的所有数据都会被忽略（感觉就像是 字符串被莫名其妙的截断了）。这也意味着，C字符串只合适保存简单的文本，而不能用于保存图片、视频、其他文件等二进制数据。而在PHP中，我们可以使用$str = file_get_contents(“filename”);保存图片、视频等二进制数据。
+（2）   效率对比。
+     由于C字符串中使用\0来标志字符串的结束，因此，对于strlen函数而言，获取字符串长度的操作需要顺序遍历字符串，直到遇到\0为止，因此strlen函数的时间复杂度是O(n)。而在PHP中，字符串是以：
+struct{
+      char *val;
+      int len;
+} str;
+ 这样一种结构体来表示的，因而获取字符串的长度只需要通过常量的时间便可以完成：
+#define Z_STRLEN(zval)          (zval).value.str.len
+当然，仅仅是strlen函数的性能，无法支持“PHP中string比c字符串的效率更高”的结论（一个很明显的原因是PHP是构建在C语言之上的高级语言），而仅仅说明，在时间复杂度上，PHP字符串比C字符串更加高效。
+（3）      很多C字符串函数存在缓冲区溢出的漏洞
+缓存区溢出是C语言中常见的漏洞，这种安全隐患经常是致命的。一个典型的缓存区溢出的例子如下：
+void str2Buf(char *str) {
+    char buffer[16];
+    strcpy(buffer,str);
+}
+ 这个函数将str的内容copy到buffer数组中，而buffer数组的大小是16，因此如果str的长度大于16，便会发生缓冲区溢出的问题。
+除了strcpy，还有gets, strcat, fprintf等字符串函数也会有缓冲区溢出的问题。
+PHP中并没有strcpy与strcat之类的函数，实际上由于PHP语言的简洁性，并不需要提供strcpy和strcat之类的函数。例如我们要复制一个字符串，直接使用=即可：
+$str = "this is a string";
+$str_copy = $str;
+　　由于PHP中变量共享zval的特性，并不会有空间浪费.而简单的.连接符可以轻松实现字符串连接：
+$str = "this is";
+$str .= "test string";
+echo $str;
+　　关于字符串连接符过程中的内存分配和管理，可以查看zend引擎部分的实现，这里暂时忽略。
+二、   字符串操作相关函数（部分）
+
+         毫无疑问，研究字符串的目的并不只是为了知道它的结构和特性，而是为了更好的使用它。我们日常的工作中，恐怕有一般以上的工作都是在与字符串打交道：如处理一个日期串、加密一个密码、获取用户信息、正则表达式匹配替换、字符串替换、格式化一个串等等。可以说，在PHP开发中，你无法避免与字符串的直接或者间接接触（就像无法摆脱呼吸）。正因为如此，PHP为开发者提供了大量的、丰富的字符串操作函数（ http://cn2.php.net/manual/en/ref.strings.php），这对于90%以上的字符串操作，已经基本足够。
+         由于字符串函数众多，不可能一一说明。这里只挑选几个比较典型的字符串操作函数     来做简单的说明（我相信80%以上的PHPer对于字符串的操作函数掌握的非常的好）。
+在开始说明之前，有必要强调一下字符串函数的使用原则，理解和掌握这些原则对于高效、熟练使用字符串函数非常关键，这些原则包括（不仅限于）：
+（1）       如果你的操作既可以使用正则表达式，也可以使用字符串。那么优先考虑字符串操作。
+         正则表达式是处理文本的绝好工具，尤其对于模式查找、模式替换这一类应用，正则可以说是无往不利。正因为如此，正则表达式在很多场合都被滥用。如果对于你的字符串操作，既可以使用字符串函数完成，也可以使用正则表达式完成，那么，请优先选择字符串操作函数，因为正则表达式在一定场合下会有严重的性能问题。
+（2）       注意false与0
+  　　PHP是弱变量类型，相信不少phper开始都深受其害
+var_dump( 0 == false);//bool(true)
+var_dump( 0 === false);//bool(false)
+　　等等，这与字符串操作函数有什么关系？
+　　在PHP中，有一类函数用于查找（如strpos, stripos）,这类查找函数在查找成功时，返回的是子串在原串中的index，如strpos：
+var_dump(strpos("this is abc", "abc"));
+　　而在查找不成功时，返回的是false：
+var_dump(strpos("this is abc", "angle"));//false
+　　这里便有一个坑:字符串的索引也是以0开始的！如果子串刚好在源串的起始位置出现，那么，简单的==比较便无法区分究竟strpos是不是成功：
+var_dump(strpos("this is abc", "this"));
+　　因此我们一定是要用===来比较的：
+if((strpos("this is abc", "this")) === false){
+    // not found
+}
+　　（3）       多看手册，避免重复造轮子。
+  相信不少PHPer面试都碰到过这样的问题：如何翻转一个字符串？由于题目中只提及“如何“，而并没有限制”不使用PHP内置函数“。那么对于本题，最简洁的方法自然是使用strrev函数。另一个说明不应该重复造轮子的函数是levenshtein函数，这个函数如同其名字一样，返回的是两个字符串的编辑距离。作为动态规划（DP）的典型代表案例之一，我想编辑距离很多人都不陌生。碰到这类问题，你还准备DP搞起吗？一个函数搞定它：
+$str1 = "this is test";
+$str2 = "his is tes";
+echo levenshtein($str1, $str2);
+在某些情况下，我们都应该尽可能的“懒“，不是吗。
+以下是字符串操作函数节选（对于最常见的操作，请直接参考手册）
+1.　　strlen
+此标题一出，我猜想大多数人的表情是这样的：
+
+或者是这样的：
+ 
+我要说的，并不是这个函数本身，而是这个函数的返回值。
+1
+2
+int strlen ( string $string )
+Returns the length of the given string.
+虽然手册上明确指出“strlen函数返回给定字符串的长度”，但是，并没有对长度单位做任何说明，长度究竟是指”字符的个数“还是说”字符的字节数“。而我们要做的，并不是臆想，而是测试：
+在GBK编码格式下：
+echo strlen(“这是中文”);//8
+说明strlen函数返回的是字符串的字节数。那么又有问题了，如果是utf-8编码，由于中文在utf8编码的情况下，每个中文使用3个byte，因而，我们期望的结果应该是12:
+echo strlen(“这是中文”);//12
+这说明：strlen计算字符串的长度依赖于当前的编码格式，其值并不是唯一的！这在某些情况下，自然是无法满足要求的。这时，多字节扩展mbstring便有它的发挥余地了：
+echo mb_strlen("这是中文", "GB2312");//4
+关于这点，在多字节处理中会有相应说明，这里略过。
+2. str_word_count
+str_word_count是另一个比较强大的且容易忽略的字符串函数。
+mixed str_word_count ( string $string [, int $format = 0 [, string $charlist ]] )
+其中$format的不同值可以使str_word_count函数有不同的行为。 现在，我们手头有这样的文本：
+When I am down and, oh my soul, so weary
+When troubles come and my heart burdened be
+Then, I am still and wait here in the silence
+Until you come and sit awhile with me
+You raise me up, so I can stand on mountains
+You raise me up, to walk on stormy seas
+I am strong, when I am on your shoulders
+
+You raise me up… To more than I can ber
+You raise me up, so I can stand on mountains
+You raise me up, to walk on stormy seas
+I am strong, when I am on your shoulders
+You raise me up, To more than I can be。
+那么：
+（1）$format = 0
+$format=0, $format返回的是文本中的单词的个数：
+echo str_word_count(file_get_contents(“word”)); //112
+（2）$format = 1
+$format=1时，返回的是文本中全部单词的数组：
+print_r(file_get_contents(“word”),1 );
+Array
+(
+    [0] => When
+    [1] => I
+    [2] => am
+    [3] => down
+    [4] => and
+    [5] => oh
+    [6] => my
+    [7] => soul
+    [8] => so
+    [9] => weary
+    [10] => When
+    [11] => troubles
+......
+)
+这一特性有什么作用呢？比如英文分词。还记得“单词统计”的问题么？str_word_count可以轻松完成单词统计TopK的问题：
+$s = file_get_contents("./word");
+$a = array_count_values(str_word_count($s, 1)) ;
+arsort( $a );
+print_r( $a );
+
+/*
+Array
+(
+    [I] => 10
+    [me] => 7
+    [raise] => 6
+    [up] => 6
+    [You] => 6
+    [am] => 6
+    [on] => 6
+    [can] => 4
+    [and] => 4
+    [be] => 3
+    [so] => 3
+    ……
+);*/
+（3）$format = 2
+$format=2时，返回的是一个关联数组：
+$a = str_word_count($s, 2);
+print_r($a);
+
+/*
+Array
+(
+    [0] => When
+    [5] => I
+    [7] => am
+    [10] => down
+    [15] => and
+    [20] => oh
+    [23] => my
+    [26] => soul
+    [32] => so
+    [35] => weary
+    [41] => When
+    [46] => troubles
+    [55] => come
+    ...
+)*/
+配合其他数组函数，可以实现更加多样化的功能.例如，配合array_flip，可以计算某个单词最后一次出现的位置：
+$t = array_flip(str_word_count($s, 2));
+print_r($t);
+而如果配合了array_unique之后再array_flip，则可以计算某个单词第一次出现的位置：
+$t = array_flip( array_unique(str_word_count($s, 2)) );
+print_r($t);
+
+Array
+(
+    [When] => 0
+    [I] => 5
+    [am] => 7
+    [down] => 10
+    [and] => 15
+    [oh] => 20
+    [my] => 23
+    [soul] => 26
+    [so] => 32
+    [weary] => 35
+    [troubles] => 46
+    [come] => 55
+    [heart] => 67
+    ...
+)
+3.  similar_text
+这是除了levenshtein()函数之外另一个计算两个字符串相似度的函数：
+int similar_text ( string $first , string $second [, float &$percent ] )
+$t1 = "You raise me up, so I can stand on mountains";
+$t2 = "You raise me up, to walk on stormy seas";
+$percent = 0;
+
+echo similar_text($t1, $t2, $percent).PHP_EOL;//26
+echo $percent;// 62.650602409639
+撇开具体的使用不谈，我很好奇底层对于字符串的相似度是如何定义的。
+Similar_text函数实现位于 ext/standard/string.c 中，摘取其关键代码：
+ 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+PHP_FUNCTION(similar_text){
+    char *t1, *t2;
+    zval **percent = NULL;
+    int ac = ZEND_NUM_ARGS();
+    int sim;
+    int t1_len, t2_len;
+        
+    /* 参数解析 */
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|Z", &t1, &t1_len, &t2, &t2_len, &percent) == FAILURE) {
+        return;
+    }
+         
+    /* set percent to double type */
+    if (ac > 2) {
+        convert_to_double_ex(percent);
+    }
+ 
+   /* t1_len == 0 && t2_len == 0 */
+    if (t1_len + t2_len == 0) {
+        if (ac > 2) {
+            Z_DVAL_PP(percent) = 0;
+        }
+        RETURN_LONG(0);
+    }      
+     
+    /* 计算字符串相同个数 */
+    sim = php_similar_char(t1, t1_len, t2, t2_len);
+     
+    /* 相似百分比 */
+    if (ac > 2) {
+        Z_DVAL_PP(percent) = sim * 200.0 / (t1_len + t2_len);
+    }
+  
+    RETURN_LONG(sim);
+}
+ 
+ 
+可以看出，字符串相似个数是通过 php_similar_char 函数实现的，而相似百分比则是通过公式：
+percent = sim * 200 / (t1串长度 + t2串长度)
+来定义的。
+php_similar_char的具体实现：
+ 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+static int php_similar_char(const char *txt1, int len1, const char *txt2, int len2)
+{
+    int sum;
+    int pos1 = 0, pos2 = 0, max;
+ 
+    php_similar_str(txt1, len1, txt2, len2, &pos1, &pos2, &max);
+    if ((sum = max)) {
+        if (pos1 && pos2) {
+            sum += php_similar_char(txt1, pos1,txt2, pos2);
+        }
+ 
+        if ((pos1 + max < len1) && (pos2 + max < len2)) {
+            sum += php_similar_char(txt1 + pos1 + max, len1 - pos1 - max,txt2 + pos2 + max, len2 - pos2 - max);
+        }
+    }
+ 
+    return sum;
+}
+这个函数通过调用php_similar_str来完成字符串相似个数的统计，而php_similar_str返回字符串s1与字符串s2的最长相同字符串长度：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+static void php_similar_str(const char *txt1, int len1, const char *txt2, int len2, int *pos1, int *pos2, int *max)
+{
+    char *p, *q;
+    char *end1 = (char *) txt1 + len1;
+    char *end2 = (char *) txt2 + len2;
+    int l;
+    *max = 0;
+     
+    /* 查找最长串 */
+    for (p = (char *) txt1; p < end1; p++) {
+        for (q = (char *) txt2; q < end2; q++) {
+            for (l = 0; (p + l < end1) && (q + l < end2) && (p[l] == q[l]); l++);
+            if (l > *max) {
+                *max = l;
+                *pos1 = p - txt1;
+                *pos2 = q - txt2;
+            }
+        }
+    }
+}
+ 　　php_similar_str匹配完成之后，原始的串被划分为三个部分：
+第一部分是最长串的左边部分，这一部分含有相似串，但是却不是最长的；
+第二部分是最长相似串部分；
+第三部分是最长串的右边部分，与第一部分相似，这一部分含有相似串，但是也不是最长的。因而要递归对第一部分和第三部分求相似串的长度：
+ 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+/* 最长的串左边部分相似串 */
+if (pos1 && pos2) {
+    sum += php_similar_char(txt1, pos1,txt2, pos2);
+}
+ 
+/* 右半部分相似串 */
+if ((pos1 + max < len1) && (pos2 + max < len2)) {
+    sum += php_similar_char(txt1 + pos1 + max, len1 - pos1 - max, txt2 + pos2 + max, len2 - pos2 - max);
+}
+匹配的过程如下图所示：
+ 
+对于字符串函数的更多解释，可以参考PHP的在线手册，这里不再一一列举。
+三、多字节字符串
+
+　　迄今为止，我们讨论的所有的字符串和相关操作函数都是单字节的。然而这个世界是如此的丰富多彩，就好比有红瓤的西瓜也有黄瓤的西瓜一样，字符串也不例外。如我们常用的中文汉字在GBK编码的情况下，实际上是使用两个字节来编码的。多字节字符串不仅仅局限于中文汉字，还包括日文，韩文等等多个国家的文字。正因为如此，对于多字节字符串的处理显得异常重要。
+　　字符和字符集是编程过程中不可避免总是要遇到的术语。如果有童鞋对于这一块的内容并不是特别清晰，建议移步《编码大事1字符编码基础-字符和字符集，》
+　　由于我们日常中使用较多的是中文，因而我们以中文字符串截取为例， 重点研究中文字符串的问题。
+中文字符串的截取
+  　　中文字符串截取一直是个相对来说比较麻烦的问题，原因在于：
+（1） PHP原生的substr函数只支持单字节字符串的截取，对于多字节的字符串略显无力
+（2） PHP的扩展mbstring需要服务器的支持，事实上，很多开发环境中并没有开启mbstring扩展，对于习惯使用mbstring扩展的童鞋非常遗憾。
+（3） 一个更为复杂的问题是，在UTF-8编码的情况下，虽然中文是3个字节的，但是中文的某些特殊字符（如脱字符·）实际上是双字节编码的。这无疑加大了中文字符串截取的难度（毕竟，中文字符串中不可能完全不包含特殊字符）。
+     头疼之余，还是要自己撸一个中文的字符串截取的库，这个字符串截取函数应该与substr有相似的函数参数列表，而且要支持中文GBK编码和UTF-8编码情况下的截取，为了效率起见，如果服务器已经开启了mbstring扩展，那么就应该直接使用mbstring的字符串截取。
+API：
+String cnSubstr(string $str, int $start, int $len, [$encode=’GBK’]);//注意参数中$start, $len都是字符数而不是字节数。
+我们以UTF-8编码为例，来说明UTF8编码下中文的截取思路。
+(1)     编码范围：
+UTF-8的编码范围(utf-8使用1-6个字节编码字符，实际上只使用了1-4字节)：
+1个字节：00——7F
+2个字节：C080——DFBF
+3个字符：E08080——EFBFBF
+4个字符：F0808080——F7BFBFBF
+据此， 可以根据第一个字节的范围确定该字符所占的字节数：
+$ord = ord($str{$i});
+$ord < 192 单字节和控制字符
+192 <= $ord < 224 双字节
+224<= $ord < 240  三字节
+中文并没有四个字节的字符
+（2）$start为负的情况
+1
+2
+3
+4
+5
+6
+7
+if( $start < 0 ){
+    $start += cnStrlen_utf8( $str );
+  
+    if( $start < 0 ){
+        $start = 0;
+    }
+}
+网上大多数字符串截取版本都没有处理$start< 0的情况，按照PHP substr的API设计，在$start <0 时，应该加上字符串的长度（多字节指字符数）。
+其中cnStrlen_utf8用于获取字符串在utf8编码下的字符数：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+function cnStrlen_utf8( $str ){
+    $len  = 0;
+    $i    = 0;
+    $slen = strlen( $str );
+ 
+    while( $i < $slen ){
+        $ord = ord( $str{$i} );
+        if( $ord < 127){
+            $i ++;
+        }else if( $ord < 224 ){
+            $i += 2;
+        }else{
+            $i += 3;
+        }
+        $len ++;
+    }
+     
+    return $len;
+}
+因此UTF-8的截取算法为：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+function cnSubstr_utf8( $str, $start, $len ){
+    if( $start < 0 ){
+        $start += cnStrlen_utf8( $str );
+         
+        if( $start < 0 ){
+            $start = 0;
+        }
+    }   
+     
+    $slen = strlen( $str );
+     
+    if( $len < 0 ){
+        $len += $slen - $start;
+         
+        if($len < 0){
+            $len = 0;
+        }
+    }
+ 
+    $i = 0;   
+    $count = 0;
+     
+    /* 获取开始位置 */
+    while( $i < $slen && $count < $start){
+        $ord = ord( $str{$i} );
+         
+        if( $ord < 127){
+            $i ++;
+        }else if( $ord < 224 ){
+            $i += 2;
+        }else{
+            $i += 3;
+        }
+        $count ++;
+    }
+     
+    $count  = 0;
+    $substr = '';   
+     
+    /* 截取$len个字符 */
+    while( $i < $slen && $count < $len){
+        $ord = ord( $str{$i} );
+         
+        if( $ord < 127){
+            $substr .= $str{$i};
+            $i ++;
+        }else if( $ord < 224 ){
+            $substr .= $str{$i} . $str{$i+1};
+            $i += 2;
+        }else{
+            $substr .= $str{$i} . $str{$i+1} . $str{$i+2};
+            $i += 3;
+        }
+        $count ++;
+    }
+     
+    return $substr;
+}
+而最终的cnSubstr()可以设计如下（程序还有很多优化的余地）：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+function cnSubstr( $str, $start, $len, $encode = 'gbk' ){
+    if( extension_loaded("mbstring") ){
+        //echo "use mbstring";
+        //return mb_substr( $str, $start, $len, $encode );
+    }
+ 
+    $enc = strtolower( $encode );
+    switch($enc){
+        case 'gbk':
+        case 'gb2312':
+            return cnSubstr_gbk($str, $start, $len);
+            break;
+        case 'utf-8':
+        case 'utf8':
+            return cnSubstr_utf8($str, $start, $len);
+            break;
+        default:
+            //do some warning or trigger error;
+    }
+ 
+}
+简单的测试一下：
+$str = "这是中文的字符串string,还有abs· ";
+for($i = 0; $i < 10; $i++){
+         echo cnSubstr( $str,  $i, 3, 'utf8').PHP_EOL;
+}
+最后贴一下ThinkPHP extend中提供的msubstr函数（这是用正则表达式做的substr）：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+function msubstr($str, $start=0, $length, $charset="utf-8", $suffix=true) {
+    if(function_exists("mb_substr"))
+        $slice = mb_substr($str, $start, $length, $charset);
+    elseif(function_exists('iconv_substr')) {
+        $slice = iconv_substr($str,$start,$length,$charset);
+        if(false === $slice) {
+            $slice = '';
+        }
+    }else{
+        $re['utf-8']   = "/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xff][\x80-\xbf]{3}/";
+        $re['gb2312'] = "/[\x01-\x7f]|[\xb0-\xf7][\xa0-\xfe]/";
+        $re['gbk']    = "/[\x01-\x7f]|[\x81-\xfe][\x40-\xfe]/";
+        $re['big5']   = "/[\x01-\x7f]|[\x81-\xfe]([\x40-\x7e]|\xa1-\xfe])/";
+        preg_match_all($re[$charset], $str, $match);
+        $slice = join("",array_slice($match[0], $start, $length));
+    }
+    return $suffix ? $slice.'...' : $slice;
+}
+由于文章篇幅问题，更多的问题，这里不再细说。还是那句话，有任何问题，欢迎指出。
