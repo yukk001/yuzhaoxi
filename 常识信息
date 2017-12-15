@@ -4,7 +4,7 @@ chr(0xEF).chr(0xBB).chr(0xBF)
 
 
 
-
+php源码目录结构说明：
 1. build 和编译有关的目录。
 2. ext 扩展库代码，例如 MySQL、zlib、iconv 等我们熟悉的扩展库。其中/ext/standard/ 目录下是常用的标准函数集。
 3. main 主目录包含主要的 PHP 宏和定义。
