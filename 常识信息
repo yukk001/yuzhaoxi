@@ -1,3 +1,18 @@
 cvs用excel打开，乱码问题，尝试在cvs头加入一下数据，尝试：
 chr(0xEF).chr(0xBB).chr(0xBF)
 看一下这个是不是解决csv转excel乱码问题的解决方案哈
+
+
+
+
+1. build 和编译有关的目录。
+2. ext 扩展库代码，例如 MySQL、zlib、iconv 等我们熟悉的扩展库。其中/ext/standard/ 目录下是常用的标准函数集。
+3. main 主目录包含主要的 PHP 宏和定义。
+4. sapi 和各种服务器的接口调用，例如apache、IIS等，也包含一般的fastcgi、cgi等。
+5. win32 和 Windows 下编译 PHP 有关的脚本。
+6. Zend 文件夹核心的引擎，所有的 Zend API 定义与宏等。
+7. scripts Linux 下的脚本目录。
+8. tests 测试脚本目录
+9. sapi 各类 Web 服务器的接口。
+10.TSRM Zend 和 PHP 的 “线程安全资源管理器” (TSRM) 目录。
+11.pear 这个目录就是“PHP 扩展与应用仓库”的目录。包含了PEAR 的核心文件。
