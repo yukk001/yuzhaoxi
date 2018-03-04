@@ -16,21 +16,13 @@ PHP内核探索之变量（7）- 不平凡的字符串
          这种形式比较常见：$str=”this is \0 a string”; 而且以双引号包含的字符串中可以包含变量、控制字符等：$str = "this is $name, aha.\n";
 (2)     单引号
 　　单引号包含的字符都被认为是raw的，因此不会解析单引号中的变量，控制字符等：
-1
-2
-3
+
 $string = "test";
 $str = 'this is $string, aha\n';
 echo $str;
 (3)     Heredoc
 Heredoc比较适合较长的字符串表示，且对于多行的字符串表示更加灵活多样。与双引号表示形式类似，heredoc中也可以包含变量。常见的形式是：
-1
-2
-3
-4
-5
-6
-7
+
 $string ="test string";
 $str = <<<STR
 This is a string \n,
@@ -40,12 +32,7 @@ STR;
 echo $str;
 (4)     nowdoc（5.3+支持）
 nowdoc和heredoc是如此的类似，以至于我们可以把它们当做是一对儿亲兄弟。nowdoc的起始标志符是用单引号括起来的，与单引号相似，它不会解析其中的变量，格式控制符等：
-1
-2
-3
-4
-5
-6
+
 $s = <<<'EOT'
 this is $str
 this is \t test;
@@ -149,8 +136,7 @@ echo levenshtein($str1, $str2);
 或者是这样的：
  
 我要说的，并不是这个函数本身，而是这个函数的返回值。
-1
-2
+
 int strlen ( string $string )
 Returns the length of the given string.
 虽然手册上明确指出“strlen函数返回给定字符串的长度”，但是，并没有对长度单位做任何说明，长度究竟是指”字符的个数“还是说”字符的字节数“。而我们要做的，并不是臆想，而是测试：
@@ -282,41 +268,6 @@ echo $percent;// 62.650602409639
 撇开具体的使用不谈，我很好奇底层对于字符串的相似度是如何定义的。
 Similar_text函数实现位于 ext/standard/string.c 中，摘取其关键代码：
  
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
 PHP_FUNCTION(similar_text){
     char *t1, *t2;
     zval **percent = NULL;
@@ -358,25 +309,7 @@ PHP_FUNCTION(similar_text){
 percent = sim * 200 / (t1串长度 + t2串长度)
 来定义的。
 php_similar_char的具体实现：
- 
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
+
 static int php_similar_char(const char *txt1, int len1, const char *txt2, int len2)
 {
     int sum;
@@ -396,26 +329,7 @@ static int php_similar_char(const char *txt1, int len1, const char *txt2, int le
     return sum;
 }
 这个函数通过调用php_similar_str来完成字符串相似个数的统计，而php_similar_str返回字符串s1与字符串s2的最长相同字符串长度：
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
+
 static void php_similar_str(const char *txt1, int len1, const char *txt2, int len2, int *pos1, int *pos2, int *max)
 {
     char *p, *q;
@@ -440,16 +354,7 @@ static void php_similar_str(const char *txt1, int len1, const char *txt2, int le
 第一部分是最长串的左边部分，这一部分含有相似串，但是却不是最长的；
 第二部分是最长相似串部分；
 第三部分是最长串的右边部分，与第一部分相似，这一部分含有相似串，但是也不是最长的。因而要递归对第一部分和第三部分求相似串的长度：
- 
-1
-2
-3
-4
-5
-6
-7
-8
-9
+
 /* 最长的串左边部分相似串 */
 if (pos1 && pos2) {
     sum += php_similar_char(txt1, pos1,txt2, pos2);
@@ -489,13 +394,7 @@ $ord < 192 单字节和控制字符
 224<= $ord < 240  三字节
 中文并没有四个字节的字符
 （2）$start为负的情况
-1
-2
-3
-4
-5
-6
-7
+
 if( $start < 0 ){
     $start += cnStrlen_utf8( $str );
   
@@ -505,25 +404,7 @@ if( $start < 0 ){
 }
 网上大多数字符串截取版本都没有处理$start< 0的情况，按照PHP substr的API设计，在$start <0 时，应该加上字符串的长度（多字节指字符数）。
 其中cnStrlen_utf8用于获取字符串在utf8编码下的字符数：
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
+
 function cnStrlen_utf8( $str ){
     $len  = 0;
     $i    = 0;
@@ -544,64 +425,7 @@ function cnStrlen_utf8( $str ){
     return $len;
 }
 因此UTF-8的截取算法为：
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
+
 function cnSubstr_utf8( $str, $start, $len ){
     if( $start < 0 ){
         $start += cnStrlen_utf8( $str );
@@ -661,27 +485,7 @@ function cnSubstr_utf8( $str, $start, $len ){
     return $substr;
 }
 而最终的cnSubstr()可以设计如下（程序还有很多优化的余地）：
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
+
 function cnSubstr( $str, $start, $len, $encode = 'gbk' ){
     if( extension_loaded("mbstring") ){
         //echo "use mbstring";
@@ -709,24 +513,7 @@ for($i = 0; $i < 10; $i++){
          echo cnSubstr( $str,  $i, 3, 'utf8').PHP_EOL;
 }
 最后贴一下ThinkPHP extend中提供的msubstr函数（这是用正则表达式做的substr）：
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
+
 function msubstr($str, $start=0, $length, $charset="utf-8", $suffix=true) {
     if(function_exists("mb_substr"))
         $slice = mb_substr($str, $start, $length, $charset);
